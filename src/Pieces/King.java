@@ -5,9 +5,9 @@ public class King implements Piece {
   char color;
   boolean hasMoved;
 
-  public King(char color) {
+  public King(char color, boolean hasMoved) {
     this.color = color;
-    hasMoved = false;
+    this.hasMoved = hasMoved;
   }
 
   public String toString() {
@@ -20,20 +20,15 @@ public class King implements Piece {
   }
 
   @Override
-  public char getID() {
-    return 'k';
-  }
-
-  @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
-    boolean horMove = Math.abs((int) start.charAt(0) - (int) end.charAt(0)) == 1;
-    boolean vertMove = Math.abs((int) start.charAt(1) - (int) end.charAt(1)) == 1;
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    boolean horMove = Math.abs(startRow - endRow) == 1;
+    boolean vertMove = Math.abs(startCol - endCol) == 1;
     return horMove || vertMove;
   }
 
   @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
-    return isLegalMoveShape(start, end, flipped);
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return isLegalMoveShape(startRow, startCol, endRow, endCol, flipped);
   }
 
   @Override

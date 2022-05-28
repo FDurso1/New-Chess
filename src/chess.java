@@ -26,6 +26,8 @@ public class chess {
   static int startCol;  //adjusted for letters --> numbers
   static int endRow;
   static int endCol;
+  static int attackRow;
+  static int attackCol;
 
   public static void setBoard() {
 
@@ -39,10 +41,10 @@ public class chess {
       board[6][i] = new Pawn('w');
       board[1][i] = new Pawn('b');
     }
-    board[0][0] = new Rook('b');
-    board[0][7] = new Rook('b');
-    board[7][0] = new Rook('w');
-    board[7][7] = new Rook('w');
+    board[0][0] = new Rook('b', false);
+    board[0][7] = new Rook('b', false);
+    board[7][0] = new Rook('w', false);
+    board[7][7] = new Rook('w', false);
     board[0][2] = new Bishop('b');
     board[0][5] = new Bishop('b');
     board[7][2] = new Bishop('w');
@@ -53,8 +55,8 @@ public class chess {
     board[0][6] = new Knight('b');
     board[7][1] = new Knight('w');
     board[7][6] = new Knight('w');
-    board[0][4] = new King('b');
-    board[7][4] = new King('w');
+    board[0][4] = new King('b', false);
+    board[7][4] = new King('w', false);
   }
 
   public static void display() {
@@ -109,10 +111,9 @@ public class chess {
 
     if (turn % 2 == 0 && piece.getColor() == 'w') {
       return true;
-    } else if (turn % 2 == 1 && piece.getColor() == 'b') {
-      return true;
+    } else {
+      return turn % 2 == 1 && piece.getColor() == 'b';
     }
-    return false;
   }
 
   public static String getNameOfPiece(int r, int c) {
@@ -120,25 +121,32 @@ public class chess {
     return piece.getName();
   }
 
-  public static boolean validateInput(String input) {
+  public static boolean isInvalidInput(String input) {
     if (input.length() != 2) {
       System.out.println("Error, illegal input length");
-      return false;
+      return true;
     } else if (input.charAt(1) - '0' > 8 || input.charAt(1) - '0' < 1) {
       System.out.println("Error, illegal input row number");
-      return false;
+      return true;
     } else if (convertColumn(input.charAt(0)) == -1) {
       System.out.println("Error, illegal input column letter");
-      return false;
+      return true;
     }
-    return true;
+    return false;
   }
 
   public static void startTurn() {
+
+    if (getCheckingPiece() != null) {
+      if (isCheckMate()) {
+        System.out.println("The Game is Over! You are in CHECKMATE!");
+      }
+    }
+
     System.out.println("Enter the coordinates, ex A1, or a piece you want to move");
     String input = keyIn.next();
 
-    if (!validateInput(input)) {
+    if (isInvalidInput(input)) {
       startTurn();
     } else {
       startRow = input.charAt(1) - '0';
@@ -151,7 +159,7 @@ public class chess {
         System.out.println("Error, you do not have a piece at that location");
         startTurn();
       } else {
-        continueTurn(input);
+        continueTurn();
       }
     }
   }
@@ -193,64 +201,67 @@ public class chess {
       }
       return true;
     } else if (Math.abs(sr - er) == Math.abs(sc - ec)){ //diagonal movement
-      return checkDiagonals(sr, sc, er, sc);
+      return checkDiagonals(sr, sc, er, ec);
     } else {  //knight
       return true;
     }
   }
 
   public static boolean checkDiagonals(int sr, int sc, int er, int ec) {
+    System.out.println("Checking diagonals");
+    System.out.println("Going from " + sc + ", " + sr + " to " + ec + ", " + er);
+
     if (sr > er && sc > ec) {
-      for (int r = sr-1; r > er; r--) {
-        for (int c = sc-1; c > ec; c--) {
-          Piece piece = (Piece) board[r][c];
-          if (!(piece.getClass() == Empty.class)) {
-            return false;
-          }
+      System.out.println("Start rows and cols greater");
+      for (int i = 1; i < sr - er; i++) {
+        Piece piece = (Piece) board[sr-i][sc-i];
+        if (piece.getClass() != Empty.class) {
+          //System.out.println("Piece blocking at " + c + ", " + r);
+          return false;
         }
       }
     }
 
     if (sr > er && sc < ec) {
-      for (int r = sr-1; r > er; r--) {
-        for (int c = ec-1; c > sc; c--) {
-          Piece piece = (Piece) board[r][c];
-          if (!(piece.getClass() == Empty.class)) {
-            return false;
-          }
+      System.out.println("Start rows greater");
+      for (int i = 1; i < sr - er; i++) {
+        Piece piece = (Piece) board[sr-i][sc+i];
+        if (piece.getClass() != Empty.class) {
+          //System.out.println("Piece blocking at " + c + ", " + r);
+          return false;
         }
       }
     }
 
     if (sr < er && sc > ec) {
-      for (int r = er-1; r > sr; r--) {
-        for (int c = sc-1; c > ec; c--) {
-          Piece piece = (Piece) board[r][c];
-          if (!(piece.getClass() == Empty.class)) {
-            return false;
-          }
+      System.out.println("Start cols greater");
+      for (int i = 1; i < er - sr; i++) {
+        Piece piece = (Piece) board[sr+i][sc-i];
+        if (piece.getClass() != Empty.class) {
+          //System.out.println("Piece blocking at " + c + ", " + r);
+          return false;
         }
       }
     }
 
     if (sr < er && sc < ec) {
-      for (int r = er-1; r > sr; r--) {
-        for (int c = ec-1; c > sc; c--) {
-          Piece piece = (Piece) board[r][c];
-          if (!(piece.getClass() == Empty.class)) {
-            return false;
-          }
+      System.out.println("End rows and cols greater");
+      for (int i = 1; i < er - sr; i++) {
+        Piece piece = (Piece) board[sr+i][sc+i];
+        if (piece.getClass() != Empty.class) {
+          //System.out.println("Piece blocking at " + c + ", " + r);
+          return false;
         }
       }
     }
     return true;
   }
 
-  public static void continueTurn(String prevInput) {
+  public static void continueTurn() {
     System.out.println("You have selected a " + getNameOfPiece(startRow, startCol) + ".");
     System.out.println("Please select a board location, ex A3, to move it to");
     String input = keyIn.next();
-    if (!validateInput(input)) {
+    if (isInvalidInput(input)) {
       System.out.println("Disregarding previous piece selection");
       startTurn();
     }
@@ -268,28 +279,33 @@ public class chess {
       Piece curPiece = (Piece) board[startRow][startCol];
       Piece curEndPiece = (Piece) board[endRow][endCol];
 
-      if (curEndPiece.getClass() == Empty.class) {    //not a capture
-        if (!curPiece.isLegalMoveShape(prevInput, input, flipped)) {
-          System.out.println("Illegal move shape. Disregarding previous piece selection");
-          startTurn();
-        } else if (!wayIsClear(startRow, startCol, endRow, endCol)) {
-          System.out.println("There is a piece blocking that movement. Disregarding previous piece selection.");
-          startTurn();
-        } else {
-          movePiece(startRow, startCol, endRow, endCol);
+      if (!wayIsClear(startRow, startCol, endRow, endCol)) {
+        System.out.println("There is a piece blocking that movement. Disregarding previous piece selection.");
+        startTurn();
+      } else {
+        if (curEndPiece.getClass() == Empty.class) {    //not a capture
+          if (!curPiece.isLegalMoveShape(startRow, startCol, endRow, endCol, flipped)) {
+            System.out.println("Illegal move shape. Disregarding previous piece selection");
+            startTurn();
+          }
+        } else {      //capture
+          if (!curPiece.isLegalCaptureShape(startRow, startCol, endRow, endCol, flipped)) {
+            System.out.println("Illegal capture shape. Disregarding previous piece selection");
+            startTurn();
+          }
         }
-      } else {      //capture
-        if (!curPiece.isLegalCaptureShape(prevInput, input, flipped)) {
-          System.out.println("Illegal capture shape. Disregarding previous piece selection");
+        movePiece(startRow, startCol, endRow, endCol);
+        Piece dangerPiece = getCheckingPiece();
+        if (dangerPiece != null) {
+          System.out.println("This move leaves your king in threatened by an enemy " + dangerPiece.getName() + ". " +
+                  "Disregarding previous piece selection");
+          board[startRow][startCol] = curPiece;
+          board[endRow][endCol] = curEndPiece;
           startTurn();
-        } else if (!wayIsClear(startRow, startCol, endRow, endCol)) {
-          System.out.println("There is a piece blocking that movement. Disregarding previous piece selection.");
-          startTurn();
-        } else {
-          movePiece(startRow, startCol, endRow, endCol);
         }
       }
     }
+    promotePawns();
     turn++;
     display();
     startTurn();
@@ -303,14 +319,136 @@ public class chess {
     System.out.println("TESTING: movepiece endCol: " + ec);
 
     Piece curPiece = (Piece) board[sr][sc];
-    board[sr][sc] = new Empty();
-    board[er][ec] = curPiece;
     if (curPiece.getClass() == Rook.class) {
       Rook curRook = (Rook) board[sr][sc];
       curRook.setMoved();   //en passant no longer available for this rook
+      board[er][ec] = curRook;
+
     } else if (curPiece.getClass() == King.class) {
       King curKing = (King) board[sr][sc];
       curKing.setMoved();   //en passant no longer available for this king
+      board[er][ec] = curKing;
+    } else {
+      board[er][ec] = curPiece;
+    }
+    board[sr][sc] = new Empty();
+  }
+
+  public static int[] findCurKing() {
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        if (piece.getClass() == King.class && piece.getColor() == 'w' && turn%2 == 0) {
+          return new int[]{i, j};
+        } else if (piece.getClass() == King.class && piece.getColor() == 'b' && turn%2 == 1) {
+          return new int[]{i, j};
+        }
+      }
+    }
+    throw new RuntimeException();
+  }
+
+  public static Piece getCheckingPiece() {
+    int[] coords = findCurKing();
+    int kingRow = coords[0];
+    int kingCol = coords[1];
+  //  System.out.println("King coords: " + kingCol + ", " + kingRow);
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        if (piece.getColor() == 'b' && turn % 2 == 0 || piece.getColor() == 'w' && turn % 2 == 1) {
+   //       System.out.println("Enemy " + piece.getName() + " detected");
+          if (piece.isLegalCaptureShape(i, j, kingRow, kingCol, flipped) && wayIsClear(i, j, kingRow, kingCol)) {
+            attackRow = i;
+            attackCol = j;
+            return piece;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static boolean isCheckMate() {
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        if (piece.getColor() == 'w' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
+
+          //first try to capture the attacking piece
+          if (piece.isLegalCaptureShape(i, j, attackRow, attackCol, flipped) &&
+                  wayIsClear(i, j, attackRow, attackCol)) {
+            Piece endPiece = (Piece) board[attackRow][attackCol];
+            movePiece(i, j, attackRow, attackCol);
+            Piece dangerPiece = getCheckingPiece();
+            if (dangerPiece == null) {          //safe way out of check found, undo the move
+              board[startRow][startCol] = piece;
+              board[endRow][endCol] = endPiece;
+              return false;
+            }
+            board[startRow][startCol] = piece;  //not a safe way out of check, still undo the move
+            board[endRow][endCol] = endPiece;
+          }
+          //current piece cannot capture the checking piece
+
+          for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+              if (piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c)) {
+                Piece endPiece = (Piece) board[r][c];
+                movePiece(i, j, r, c);
+                Piece dangerPiece = getCheckingPiece();
+                if (dangerPiece == null) {          //safe way out of check found, undo the move
+                  board[startRow][startCol] = piece;
+                  board[r][c] = endPiece;
+                  return false;
+                }
+                board[startRow][startCol] = piece;  //not a safe way out of check, still undo the move
+                board[r][c] = endPiece;
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  public static void promotePawns() {
+
+    String[] values = {"queen","rook","bishop","knight"};
+
+    for (int i = 0; i < 8; i++) {
+      Piece piece = (Piece) board[0][i];
+      Piece oPiece = (Piece) board[7][i];
+      if (piece.getClass() == Pawn.class || oPiece.getClass() == Pawn.class) {
+        System.out.println("What would you like to promote your pawn to (ex, Queen)?");
+        String input = keyIn.next();
+        while(!Arrays.asList(values).contains(input.toLowerCase())) {
+          System.out.println("That is not a legal piece selection. Please select again");
+          input = keyIn.next();
+        }
+        if (turn % 2 == 0) {
+          if (input.equalsIgnoreCase("queen")) {
+            board[0][i] = new Queen('w');
+          } else if (input.equalsIgnoreCase("rook")) {
+            board[0][i] = new Rook('w', true);
+          } else if (input.equalsIgnoreCase("bishop")) {
+            board[0][i] = new Bishop('w');
+          } else {
+            board[0][i] = new Knight('w');
+          }
+        } else {
+          if (input.equalsIgnoreCase("queen")) {
+            board[7][i] = new Queen('b');
+          } else if (input.equalsIgnoreCase("rook")) {
+            board[7][i] = new Rook('b', true);
+          } else if (input.equalsIgnoreCase("bishop")) {
+            board[7][i] = new Bishop('b');
+          } else {
+            board[7][i] = new Knight('b');
+          }
+        }
+      }
     }
   }
 

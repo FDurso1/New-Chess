@@ -7,9 +7,8 @@ public interface Piece {
 
   String toString();
   char getColor();
-  char getID();
-  boolean isLegalMoveShape(String start, String end, boolean flipped);
-  boolean isLegalCaptureShape(String start, String end, boolean flipped);
+  boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped);
+  boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped);
   String getName();
 
 }

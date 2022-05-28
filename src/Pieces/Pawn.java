@@ -18,8 +18,36 @@ public class Pawn implements Piece {
   }
 
   @Override
-  public char getID() {
-    return 'p';
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    if ((color == 'w' && !flipped) || (color == 'b' && flipped)) {
+      System.out.println("not flipped board");
+      if (startCol == endCol && startRow == 6 && endRow == 4) {
+        System.out.println("double jump");
+        return true;
+      } else {
+        return startCol == endCol && startRow == endRow + 1;
+      }
+    } else {
+      if (startCol == endCol && startRow == 1 && endRow == 3) {
+        return true;
+      } else {
+        return startCol == endCol && startRow == endRow - 1;
+      }
+    }
+  }
+
+  @Override
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    if ((color == 'w' && !flipped) || (color == 'b' && flipped)) {
+      if (Math.abs(startCol - endCol) == 1) { //one column difference
+        return startRow == endRow + 1;    //one row going 'up'
+      }
+    } else {
+      if (Math.abs(startCol - endCol) == 1) { //one column difference
+        return startRow == endRow - 1;    //one row going 'down'
+      }
+    }
+    return false;
   }
 
      /*
@@ -36,42 +64,6 @@ public class Pawn implements Piece {
     when it is not flipped, white pawns can move up (to smaller rows) and black down toward larger rows
     when it is flipped, the colors are reversed.
    */
-
-  @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
-  System.out.println("Start: " + start);
-  System.out.println("End: " + end);
-
-    if ((color == 'w' && !flipped) || (color == 'b' && flipped)) {
-      System.out.println("here 1");
-      if (start.charAt(0) == end.charAt(0) && start.charAt(1) == '7' && end.charAt(1) == '5') {
-        System.out.println("double jump");
-        return true;
-      } else {
-        return start.charAt(0) == end.charAt(0) && (int) start.charAt(1) == ((int) end.charAt(1) + 1);
-      }
-    } else {
-      if (start.charAt(0) == end.charAt(0) && start.charAt(1) == '2' && end.charAt(1) == '4') {
-        return true;
-      } else {
-        return start.charAt(0) == end.charAt(0) && (int) start.charAt(1) == ((int) end.charAt(1) - 1);
-      }
-    }
-  }
-
-  @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
-    if ((color == 'w' && !flipped) || (color == 'b' && flipped)) {
-      if (Math.abs((int) start.charAt(0) - (int) end.charAt(0)) == 1) { //one column difference
-        return (int) start.charAt(1) == ((int) end.charAt(1) + 1);    //one row going 'up'
-      }
-    } else {
-      if (Math.abs((int) start.charAt(0) - (int) end.charAt(0)) == 1) { //one column difference
-        return (int) start.charAt(1) == ((int) end.charAt(1) - 1);    //one row going 'down'
-      }
-    }
-    return false;
-  }
 
   @Override
   public String getName() {

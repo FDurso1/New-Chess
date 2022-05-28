@@ -18,23 +18,13 @@ public class Bishop implements Piece{
   }
 
   @Override
-  public char getID() {
-    return 'b';
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return Math.abs(startRow - endRow) - Math.abs(startCol - endCol) == 0;
   }
 
   @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
-    int horDist = (int) start.charAt(0) - (int) end.charAt(0);
-    int vertDist = (int) start.charAt(1) - (int) end.charAt(1);
-    if (horDist == 0 || vertDist == 0) {
-      return false;
-    }
-    return Math.abs(horDist) - Math.abs(vertDist) == 0;
-  }
-
-  @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
-    return isLegalMoveShape(start, end, flipped);
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return isLegalMoveShape(startRow, startCol, endRow, endCol, flipped);
   }
 
   @Override

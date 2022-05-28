@@ -18,23 +18,18 @@ public class Knight implements Piece {
   }
 
   @Override
-  public char getID() {
-    return 'n';
-  }
-
-  @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
-    if (Math.abs((int) start.charAt(0) - (int) end.charAt(0)) == 1) {
-      return (Math.abs((int) start.charAt(1) - (int) end.charAt(1)) == 2);
-    } else if (Math.abs((int) start.charAt(0) - (int) end.charAt(0)) == 2) {
-      return (Math.abs((int) start.charAt(1) - (int) end.charAt(1)) == 1);
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    if (Math.abs(startRow - endRow) == 1) {
+      return (Math.abs(startCol - endCol) == 2);
+    } else if (Math.abs(startCol - endCol) == 1) {
+      return (Math.abs(startRow - endRow) == 2);
     }
     return false;
   }
 
   @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
-    return isLegalMoveShape(start, end, flipped);
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return isLegalMoveShape(startRow, startCol, endRow, endCol, flipped);
   }
 
   @Override

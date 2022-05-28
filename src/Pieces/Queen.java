@@ -18,25 +18,15 @@ public class Queen implements Piece {
   }
 
   @Override
-  public char getID() {
-    return 'q';
-  }
-
-  @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
-
-    boolean likeARook = (start.charAt(0) == end.charAt(0) ^ start.charAt(1) == end.charAt(1));
-
-    int horDist = (int) start.charAt(0) - (int) end.charAt(0);
-    int vertDist = (int) start.charAt(1) - (int) end.charAt(1);
-    boolean likeABishop = Math.abs(horDist) - Math.abs(vertDist) == 0;
-
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    boolean likeARook = (startRow == endRow ^ startCol == endCol);
+    boolean likeABishop = Math.abs(startRow - endRow) - Math.abs(startCol - endCol) == 0;
     return likeABishop || likeARook;
   }
 
   @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
-    return isLegalMoveShape(start, end, flipped);
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return isLegalMoveShape(startRow, startCol, endRow, endCol, flipped);
   }
 
   @Override

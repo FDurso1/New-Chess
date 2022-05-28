@@ -2,8 +2,14 @@ package Pieces;
 
 public class Empty implements Piece {
 
+  char color = 0;
+
   public Empty() {
 
+  }
+
+  public Empty(char color) {
+    this.color = color;
   }
 
   public String toString() {
@@ -12,21 +18,16 @@ public class Empty implements Piece {
 
   @Override
   public char getColor() {
-    return 0;
+    return color;
   }
 
   @Override
-  public char getID() {
-    return 0;
-  }
-
-  @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
     return false;
   }
 
   @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
     return false;
   }
 

@@ -5,9 +5,9 @@ public class Rook implements Piece {
   char color;
   boolean hasMoved;
 
-  public Rook(char color) {
+  public Rook(char color, boolean hasMoved) {
     this.color = color;
-    hasMoved = false;
+    this.hasMoved = hasMoved;
   }
 
   public String toString() {
@@ -20,18 +20,13 @@ public class Rook implements Piece {
   }
 
   @Override
-  public char getID() {
-    return 'r';
+  public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return (startRow == endRow ^ startCol == endCol);
   }
 
   @Override
-  public boolean isLegalMoveShape(String start, String end, boolean flipped) {
-    return (start.charAt(0) == end.charAt(0) ^ start.charAt(1) == end.charAt(1));
-  }
-
-  @Override
-  public boolean isLegalCaptureShape(String start, String end, boolean flipped) {
-    return isLegalMoveShape(start, end, flipped);
+  public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
+    return isLegalMoveShape(startRow, startCol, endRow, endCol, flipped);
   }
 
   @Override
