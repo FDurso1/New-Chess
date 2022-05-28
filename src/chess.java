@@ -135,7 +135,24 @@ public class chess {
     return false;
   }
 
+  public static void cleanEnPawns() {
+    for (int i = 2; i < 8; i+=3) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        if (piece.getClass() == enPawn.class) {
+          if (turn % 2 == 0 && piece.getColor() == 'w') {
+            board[i][j] = new Empty();
+          } else if (turn % 2 == 1 && piece.getColor() == 'b') {
+            board[i][j] = new Empty();
+          }
+        }
+      }
+    }
+  }
+
   public static void startTurn() {
+
+    cleanEnPawns();
 
     if (getCheckingPiece() != null) {
       if (isCheckMate()) {
@@ -257,6 +274,92 @@ public class chess {
     return true;
   }
 
+  public static boolean tryCastle() {
+    Piece piece = (Piece) board[startRow][startCol];
+    if (piece.getClass() != King.class) {
+      return false;
+    }
+    return Math.abs(startCol - endCol) == 2 && startRow == endRow;
+  }
+
+  public static boolean legalCastle() {
+
+//    System.out.println("1");
+//    display();
+
+  King king = (King) board[startRow][startCol];
+
+  int direction = -1;
+  if (startCol == endCol+2) {
+    direction = 1;
+  }
+
+  Piece rPiece;
+
+  if (direction == 1) {
+    rPiece = (Piece) board[startRow][0];
+  } else {
+    rPiece = (Piece) board[startRow][7];
+  }
+
+  if (rPiece.getClass() != Rook.class) {
+    System.out.println("Rook not available for castle");
+    return false;
+  }
+  Rook rook = (Rook) rPiece;
+  if (king.hasMoved() || rook.hasMoved()) {
+    System.out.println("Either King or Rook has already moved");
+    return false;
+  }
+  if (getCheckingPiece() != null) {
+    System.out.println("Cannot castle out of check");
+   return false;
+  }
+//      System.out.println("2");
+//      display();
+
+  if (!wayIsClear(startRow, startCol, endRow, endCol)) {
+    System.out.println("There are pieces in the way of your castle");
+    return false;
+  }
+//      System.out.println("3");
+//      display();
+
+  board[startRow][startCol] = new Empty();
+  board[startRow][startCol - direction] = new King(king.getColor(), false);
+  Piece piece = getCheckingPiece();
+
+//      System.out.println("4");
+//      display();
+
+  if (piece != null) {
+    System.out.println("An enemy " + piece.getName() + " is preventing your castle");
+    board[startRow][startCol] = new King(king.getColor(), false);
+    board[startRow][startCol - direction] = new Empty();
+    System.out.println("You cannot castle through a check");
+
+//        System.out.println("5");
+//        display();
+      return false;
+    }
+    board[startRow][startCol - direction] = new Empty();
+    board[startRow][startCol - 2 * direction] = new King(king.getColor(), true);
+    if (getCheckingPiece() != null) {
+      board[startRow][startCol] = new King(king.getColor(), false);
+      board[startRow][startCol - 2 * direction] = new Empty();
+      System.out.println("You cannot castle into a check");
+      return false;
+    }
+
+    if (direction == 1) {
+      board[startRow][0] = new Empty();
+    } else {
+      board[startRow][7] = new Empty();
+    }
+    board[startRow][startCol - direction] = new Rook(rook.getColor(), true);
+    return true;
+  }
+
   public static void continueTurn() {
     System.out.println("You have selected a " + getNameOfPiece(startRow, startCol) + ".");
     System.out.println("Please select a board location, ex A3, to move it to");
@@ -275,6 +378,10 @@ public class chess {
       System.out.println("Error, you cannot move onto your own piece.");
       System.out.println("Disregarding previous piece selection");
       startTurn();
+    } else if (tryCastle()) {
+      if (!legalCastle()) {
+        startTurn();
+      } //else, legal castle, skip ahead to end-turn calls
     } else {
       Piece curPiece = (Piece) board[startRow][startCol];
       Piece curEndPiece = (Piece) board[endRow][endCol];
@@ -306,29 +413,66 @@ public class chess {
       }
     }
     promotePawns();
+    prepEnPassant(startRow, startCol, endRow, endCol);
     turn++;
     display();
     startTurn();
   }
 
+  /*
+  Create an invisible allied piece when en-passant is possible for your opponent's next turn.
+  These pieces will be cleaned up at the start of your next turn.
+   */
+  public static void prepEnPassant(int sr, int sc, int er, int ec) {
+    if (Math.abs(sr-er) == 2 && sc == ec) {
+      Piece piece = (Piece) board[er][ec];
+      if (piece.getClass() == Pawn.class) {
+        if (ec > 0) {
+          Piece toLeft = (Piece) board[er][ec-1];
+          if (toLeft.getClass() == Pawn.class && !pieceSameAsCurTurn(er, ec-1)) {
+            if (er < sr) {
+              board[er+1][sc] = new enPawn(piece.getColor());
+            } else {
+              board[er-1][sc] = new enPawn(piece.getColor());
+            }
+          } //else, there is no enemy pawn to the left which can take advantage
+        }
+        if (ec < 7) {
+          Piece toRight = (Piece) board[er][ec+1];
+          if (toRight.getClass() == Pawn.class && !pieceSameAsCurTurn(er, ec+1)) {
+            if (er < sr) {
+              board[er+1][sc] = new enPawn(piece.getColor());
+            } else {
+              board[er-1][sc] = new enPawn(piece.getColor());
+            }
+          } //else, there is no enemy pawn to the right which can take advantage
+        }
+      } //else, a pawn was not moved in this way
+    } //else, a not the right move shape for a pawn double jump
+  }
+
   public static void movePiece(int sr, int sc, int er, int ec) {
 
-    System.out.println("TESTING: movepiece startRow: " + sr);
-    System.out.println("TESTING: movepiece startCol: " + sc);
-    System.out.println("TESTING: movepiece endRow: " + er);
-    System.out.println("TESTING: movepiece endCol: " + ec);
+//    System.out.println("TESTING: movepiece startRow: " + sr);
+//    System.out.println("TESTING: movepiece startCol: " + sc);
+//    System.out.println("TESTING: movepiece endRow: " + er);
+//    System.out.println("TESTING: movepiece endCol: " + ec);
 
     Piece curPiece = (Piece) board[sr][sc];
     if (curPiece.getClass() == Rook.class) {
       Rook curRook = (Rook) board[sr][sc];
-      curRook.setMoved();   //en passant no longer available for this rook
+      curRook.setMoved();   //castling no longer available for this rook
       board[er][ec] = curRook;
 
     } else if (curPiece.getClass() == King.class) {
       King curKing = (King) board[sr][sc];
-      curKing.setMoved();   //en passant no longer available for this king
+      curKing.setMoved();   //castling no longer available for this king
       board[er][ec] = curKing;
     } else {
+      Piece piece = (Piece) board[er][ec];
+      if (piece.getClass() == enPawn.class) { //when an enPawn is captured, remove the actual pawn
+        board[sr][ec] = new Empty();
+      }
       board[er][ec] = curPiece;
     }
     board[sr][sc] = new Empty();
@@ -359,6 +503,7 @@ public class chess {
         if (piece.getColor() == 'b' && turn % 2 == 0 || piece.getColor() == 'w' && turn % 2 == 1) {
    //       System.out.println("Enemy " + piece.getName() + " detected");
           if (piece.isLegalCaptureShape(i, j, kingRow, kingCol, flipped) && wayIsClear(i, j, kingRow, kingCol)) {
+            System.out.println("An enemy " + piece.getName() + " on " + j + ", " + i + " is checking your king");
             attackRow = i;
             attackCol = j;
             return piece;

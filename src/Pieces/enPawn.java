@@ -1,17 +1,15 @@
 package Pieces;
 
-public class Rook implements Piece {
+public class enPawn implements Piece {
 
   char color;
-  boolean hasMoved;
 
-  public Rook(char color, boolean hasMoved) {
+  public enPawn(char color) {
     this.color = color;
-    this.hasMoved = hasMoved;
   }
 
   public String toString() {
-    return new String(new char[] { color, 'r' });
+    return "__";
   }
 
   @Override
@@ -21,24 +19,16 @@ public class Rook implements Piece {
 
   @Override
   public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
-    return (startRow == endRow ^ startCol == endCol);
+    return false;
   }
 
   @Override
   public boolean isLegalCaptureShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
-    return isLegalMoveShape(startRow, startCol, endRow, endCol, flipped);
+    return false;
   }
 
   @Override
   public String getName() {
-    return "Rook";
-  }
-
-  public boolean hasMoved() {
-    return hasMoved;
-  }
-
-  public void setMoved() {
-    hasMoved = true;
+    return null;
   }
 }

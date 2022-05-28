@@ -21,9 +21,9 @@ public class King implements Piece {
 
   @Override
   public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
-    boolean horMove = Math.abs(startRow - endRow) == 1;
-    boolean vertMove = Math.abs(startCol - endCol) == 1;
-    return horMove || vertMove;
+    boolean horMove = Math.abs(startRow - endRow) <= 1 ;
+    boolean vertMove = Math.abs(startCol - endCol) <= 1;
+    return horMove && vertMove && (startCol - endRow + startCol - endCol) != 0;
   }
 
   @Override
@@ -36,7 +36,7 @@ public class King implements Piece {
     return "King";
   }
 
-  public boolean getMoved() {
+  public boolean hasMoved() {
     return hasMoved;
   }
 
