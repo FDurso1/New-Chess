@@ -21,6 +21,7 @@ public class chess {
   static Scanner keyIn = new Scanner(System.in);
 
   static boolean flipped = false;
+  static boolean flipActive = true;
   static int turn = 0;
   static int startRow;  //adjusted for -1 from having rows 1-8 but array rows 0-7
   static int startCol;  //adjusted for letters --> numbers
@@ -158,16 +159,27 @@ public class chess {
       if (isCheckMate()) {
         System.out.println("The Game is Over! You are in CHECKMATE!");
       }
+    } else {
+      if (checkStaleMate()) {
+        System.out.println("The Game is a Stalemate!");
+      }
     }
 
     System.out.println("Enter the coordinates, ex A1, or a piece you want to move");
     String input = keyIn.next();
-
-    if (isInvalidInput(input)) {
+    if (input.equalsIgnoreCase("flip")) {
+      flipBoard();
+      display();
+      startTurn();
+    }
+    else if (isInvalidInput(input)) {
       startTurn();
     } else {
       startRow = input.charAt(1) - '0';
       startRow -= 1;
+      if (flipped) {
+        startRow = 7 - startRow;
+      }
       System.out.println("TESTING: startRow: " + startRow);
       startCol = convertColumn(input.charAt(0));
       System.out.println("TESTING: startCol: " + startCol);
@@ -371,6 +383,9 @@ public class chess {
     endCol = convertColumn(input.charAt(0));
     endRow = input.charAt(1) - '0';
     endRow -= 1;
+    if (flipped) {
+      endRow = 7 - endRow;
+    }
     System.out.println("TESTING: endRow: " + endRow);
     System.out.println("TESTING: endCol: " + endCol);
 
@@ -527,14 +542,26 @@ public class chess {
             movePiece(i, j, attackRow, attackCol);
             Piece dangerPiece = getCheckingPiece();
             if (dangerPiece == null) {          //safe way out of check found, undo the move
-              board[startRow][startCol] = piece;
+              board[i][j] = piece;
               board[endRow][endCol] = endPiece;
               return false;
             }
-            board[startRow][startCol] = piece;  //not a safe way out of check, still undo the move
+            board[i][j] = piece;  //not a safe way out of check, still undo the move
             board[endRow][endCol] = endPiece;
           }
           //current piece cannot capture the checking piece
+        }
+      }
+    }
+
+    return checkStaleMate();
+  }
+
+  public static boolean checkStaleMate() {
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        if (piece.getColor() == 'w' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
 
           for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
@@ -542,12 +569,12 @@ public class chess {
                 Piece endPiece = (Piece) board[r][c];
                 movePiece(i, j, r, c);
                 Piece dangerPiece = getCheckingPiece();
-                if (dangerPiece == null) {          //safe way out of check found, undo the move
-                  board[startRow][startCol] = piece;
+                if (dangerPiece == null) {          //safe move found, undo the move
+                  board[i][j] = piece;
                   board[r][c] = endPiece;
                   return false;
                 }
-                board[startRow][startCol] = piece;  //not a safe way out of check, still undo the move
+                board[i][j] = piece;  //not a safe move, still undo the move
                 board[r][c] = endPiece;
               }
             }
@@ -565,6 +592,9 @@ public class chess {
     for (int i = 0; i < 8; i++) {
       Piece piece = (Piece) board[0][i];
       Piece oPiece = (Piece) board[7][i];
+     // System.out.println("Piece class: " + piece.getClass());
+     // System.out.println("oPiece class: " + oPiece.getClass());
+
       if (piece.getClass() == Pawn.class || oPiece.getClass() == Pawn.class) {
         System.out.println("What would you like to promote your pawn to (ex, Queen)?");
         String input = keyIn.next();
@@ -593,6 +623,18 @@ public class chess {
             board[7][i] = new Knight('b');
           }
         }
+      }
+    }
+  }
+
+  public static void flipBoard() {
+    flipped = !flipped;
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece pieceOne = (Piece) board[i][j];
+        Piece pieceTwo = (Piece) board[7-i][7-j];
+        board[i][j] = pieceTwo;
+        board[7-i][7-j] = pieceOne;
       }
     }
   }

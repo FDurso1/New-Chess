@@ -20,9 +20,9 @@ public class Pawn implements Piece {
   @Override
   public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
     if ((color == 'w' && !flipped) || (color == 'b' && flipped)) {
-      System.out.println("not flipped board");
+      //System.out.println("not flipped board");
       if (startCol == endCol && startRow == 6 && endRow == 4) {
-        System.out.println("double jump");
+       // System.out.println("double jump");
         return true;
       } else {
         return startCol == endCol && startRow == endRow + 1;
