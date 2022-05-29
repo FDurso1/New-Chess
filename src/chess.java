@@ -29,6 +29,7 @@ public class chess {
   static int endCol;
   static int attackRow;
   static int attackCol;
+  static int pawnVal = 10, knightVal = 30, bishopVal = 30, queenVal = 90, rookVal = 50;
 
   public static void setBoard() {
 
@@ -155,40 +156,44 @@ public class chess {
 
     cleanEnPawns();
 
-    if (getCheckingPiece() != null) {
-      if (isCheckMate()) {
-        System.out.println("The Game is Over! You are in CHECKMATE!");
-      }
+    if (turn % 2 == 1) {
+      AITurn();
     } else {
-      if (checkStaleMate()) {
-        System.out.println("The Game is a Stalemate!");
+      if (getCheckingPiece() != null) {
+        if (isCheckMate()) {
+          System.out.println("The Game is Over! You are in CHECKMATE!");
+        }
+      } else {
+        if (checkStaleMate()) {
+          System.out.println("The Game is a Stalemate!");
+        }
       }
-    }
 
-    System.out.println("Enter the coordinates, ex A1, or a piece you want to move");
-    String input = keyIn.next();
-    if (input.equalsIgnoreCase("flip")) {
-      flipBoard();
-      display();
-      startTurn();
-    }
-    else if (isInvalidInput(input)) {
-      startTurn();
-    } else {
-      startRow = input.charAt(1) - '0';
-      startRow -= 1;
-      if (flipped) {
-        startRow = 7 - startRow;
+      System.out.println("Enter the coordinates, ex A1, or a piece you want to move");
+      String input = keyIn.next();
+      if (input.equalsIgnoreCase("flip")) {
+        flipBoard();
+        display();
+        startTurn();
       }
-      System.out.println("TESTING: startRow: " + startRow);
-      startCol = convertColumn(input.charAt(0));
-      System.out.println("TESTING: startCol: " + startCol);
-
-      if (!pieceSameAsCurTurn(startRow, startCol)) {
-        System.out.println("Error, you do not have a piece at that location");
+      else if (isInvalidInput(input)) {
         startTurn();
       } else {
-        continueTurn();
+        startRow = input.charAt(1) - '0';
+        startRow -= 1;
+        if (flipped) {
+          startRow = 7 - startRow;
+        }
+        System.out.println("TESTING: startRow: " + startRow);
+        startCol = convertColumn(input.charAt(0));
+        System.out.println("TESTING: startCol: " + startCol);
+
+        if (!pieceSameAsCurTurn(startRow, startCol)) {
+          System.out.println("Error, you do not have a piece at that location");
+          startTurn();
+        } else {
+          continueTurn();
+        }
       }
     }
   }
@@ -237,11 +242,11 @@ public class chess {
   }
 
   public static boolean checkDiagonals(int sr, int sc, int er, int ec) {
-    System.out.println("Checking diagonals");
-    System.out.println("Going from " + sc + ", " + sr + " to " + ec + ", " + er);
+  //  System.out.println("Checking diagonals");
+  //  System.out.println("Going from " + sc + ", " + sr + " to " + ec + ", " + er);
 
     if (sr > er && sc > ec) {
-      System.out.println("Start rows and cols greater");
+   //   System.out.println("Start rows and cols greater");
       for (int i = 1; i < sr - er; i++) {
         Piece piece = (Piece) board[sr-i][sc-i];
         if (piece.getClass() != Empty.class) {
@@ -252,7 +257,7 @@ public class chess {
     }
 
     if (sr > er && sc < ec) {
-      System.out.println("Start rows greater");
+   //   System.out.println("Start rows greater");
       for (int i = 1; i < sr - er; i++) {
         Piece piece = (Piece) board[sr-i][sc+i];
         if (piece.getClass() != Empty.class) {
@@ -263,7 +268,7 @@ public class chess {
     }
 
     if (sr < er && sc > ec) {
-      System.out.println("Start cols greater");
+  //    System.out.println("Start cols greater");
       for (int i = 1; i < er - sr; i++) {
         Piece piece = (Piece) board[sr+i][sc-i];
         if (piece.getClass() != Empty.class) {
@@ -274,7 +279,7 @@ public class chess {
     }
 
     if (sr < er && sc < ec) {
-      System.out.println("End rows and cols greater");
+  //    System.out.println("End rows and cols greater");
       for (int i = 1; i < er - sr; i++) {
         Piece piece = (Piece) board[sr+i][sc+i];
         if (piece.getClass() != Empty.class) {
@@ -636,6 +641,122 @@ public class chess {
         board[i][j] = pieceTwo;
         board[7-i][7-j] = pieceOne;
       }
+    }
+  }
+
+  /*
+  Solution to "AI"
+  Different values for all the pieces, optimize board value, play with values over time
+  Adjust by avoiding captures of greater value pieces by lesser value pieces
+  Allow captures of lesser's by greater's if you can capture back.
+   ^ how far down the recursion hole to go?
+   slight random adjustments to avoid repeating play patterns
+   */
+
+  public static int getBaseBoardValue() {
+    int sum = 0;
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        int mod = 1;
+        if (piece.getColor() == 'b') {
+          mod = -1;
+        }
+        if (piece.getClass() == Pawn.class) {
+          sum += pawnVal * mod;
+        } else if (piece.getClass() == Bishop.class) {
+          sum += bishopVal * mod;
+        } else if (piece.getClass() == Rook.class) {
+          sum += rookVal * mod;
+        } else if (piece.getClass() == Knight.class) {
+          sum += knightVal * mod;
+        } else if (piece.getClass() == Queen.class) {
+          sum += queenVal * mod;
+        }
+      }
+    }
+    return sum;
+  }
+
+  public static int tryAndReport(int i, int j, int r, int c) {
+    Piece startPiece = (Piece) board[i][j];
+    Piece endPiece = (Piece) board[r][c];
+    board[r][c] = startPiece;
+    board[i][j] = new Empty();
+    int boardVal = getBaseBoardValue();
+    board[i][j] = startPiece;
+    board[r][c] = endPiece;
+    return boardVal;
+  }
+
+  public static char enemyColor(char c) {
+    if (c == 'w') {
+      return 'b';
+    }
+    return 'w';
+  }
+
+  /*
+  Cannot castle, will fail when attempting en passant
+   */
+  public static void AITurn() {
+    int bestStartRow = -1, bestStartCol = -1, bestEndRow = -1, bestEndCol = -1;
+    int bestBoardVal = -99999;
+    int mod = 1;
+    if (turn % 2 == 1) {
+      mod = -1;
+    }
+
+    Random rand = new Random();
+
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        Piece piece = (Piece) board[i][j];
+        if (piece.getColor() == '2' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
+          for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+              Piece endPiece = (Piece) board[r][c];
+              if (piece.isLegalCaptureShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getColor() == enemyColor(piece.getColor())) {
+                int newSum = tryAndReport(i, j, r, c) * mod;
+                int maybe = rand.nextInt(7);
+                if (maybe == 2) {
+                  newSum += 1;
+                }
+                if (newSum >= bestBoardVal) {
+                  bestStartRow = i;
+                  bestStartCol = j;
+                  bestEndRow = r;
+                  bestEndCol = c;
+                  bestBoardVal = newSum;
+                }
+              } else if (piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getClass() == Empty.class) {
+                int newSum = tryAndReport(i, j, r, c) * mod;
+                int maybe = rand.nextInt(7);
+                if (maybe == 2) {
+                  newSum += 1;
+                }
+                if (newSum >= bestBoardVal) {
+                  bestStartRow = i;
+                  bestStartCol = j;
+                  bestEndRow = r;
+                  bestEndCol = c;
+                  bestBoardVal = newSum;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (bestStartCol == -1) {
+      System.out.println("No legal moves found!");
+    } else {
+      Piece startPiece = (Piece) board[bestStartRow][bestStartCol];
+      board[bestEndRow][bestEndCol] = startPiece;
+      board[bestStartRow][bestStartCol] = new Empty();
+      turn++;
+      display();
+      startTurn();
     }
   }
 
