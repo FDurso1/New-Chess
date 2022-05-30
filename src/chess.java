@@ -18,6 +18,8 @@ import java.util.*;
 public class chess {
 
   static Object[][] board = new Object[8][8];
+  static Object[][] showBoard = new Object[24][8];
+
   static Scanner keyIn = new Scanner(System.in);
 
   static boolean flipped = false;
@@ -88,6 +90,8 @@ public class chess {
       System.out.println("  H   G   F   E   D   C   B   A");
       System.out.println("  7   6   5   4   3   2   1   0");
     }
+    System.out.println();
+    showDisplay();
   }
 
   public static int convertColumn(char c) {
@@ -644,6 +648,113 @@ public class chess {
     }
   }
 
+  public static void showDisplay() {
+    updateShowBoard();
+    int counter = 0;
+    int showRowNumber = 0;
+    System.out.print("  _______________________________________________________________________________________________________________");
+    for (int r = 0; r < 24; r++) {
+      counter = counter+1;
+      System.out.print("\n");
+      if (r % 3 == 1) {
+        showRowNumber += 1;
+        System.out.print(showRowNumber);
+      }
+      else {
+        System.out.print(" ");
+      }
+
+      for (int c = 0; c < 8; c++) {
+        System.out.print("|");
+        System.out.print(showBoard[r][c]);
+        System.out.print("|");
+      }
+      if (counter == 3) {
+        counter = 0;
+        System.out.print("\n");
+        System.out.print(" ----------------------------------------------------------------------------------------------------------------");
+      }
+    }
+    System.out.println();
+    System.out.println("        A            B             C             D              E             F              G            H");
+  }
+  public static void updateShowBoard() {
+    for (int r = 0; r < 8; r++) {
+      int sr = 3*r;
+      for (int c = 0; c < 8; c++) {
+        Piece piece = (Piece) board[r][c];
+
+        if (piece.getClass() == Empty.class || piece.getClass() == enPawn.class) {
+          showBoard[sr][c] = new Empty("            ");
+          showBoard[sr+1][c] = new Empty("            ");
+          showBoard[sr+2][c] = new Empty("            ");
+        }
+        else if (piece.getClass() == Pawn.class && piece.getColor() == 'w') {
+          showBoard[sr][c] = new Empty(" |''''''''| ");
+          showBoard[sr+1][c] = new Empty(" |White Pw| ");
+          showBoard[sr+2][c] = new Empty(" |~~~~~~~~| ");
+        }
+        else if (piece.getClass() == Pawn.class && piece.getColor() == 'b') {
+          showBoard[sr][c] = new Empty(" |''''''''| ");
+          showBoard[sr+1][c] = new Empty(" |Black Pw| ");
+          showBoard[sr+2][c] = new Empty(" |########| ");
+        }
+        else if (piece.getClass() == Rook.class && piece.getColor() == 'w') {
+          showBoard[sr][c] = new Empty(" |=| || |=| ");
+          showBoard[sr+1][c] = new Empty(" |White Rk| ");
+          showBoard[sr+2][c] = new Empty(" |~~~~~~~~| ");
+        }
+        else if (piece.getClass() == Rook.class && piece.getColor() == 'b') {
+          showBoard[sr][c] = new Empty(" |=| || |=| ");
+          showBoard[sr+1][c] = new Empty(" |Black Rk| ");
+          showBoard[sr+2][c] = new Empty(" |########| ");
+        }
+        else if (piece.getClass() == Knight.class && piece.getColor() == 'w') {
+          showBoard[sr][c] = new Empty("    /**/    ");
+          showBoard[sr+1][c] = new Empty(" |White Nt| ");
+          showBoard[sr+2][c] = new Empty(" |~~~~~~~~| ");
+        }
+        else if (piece.getClass() == Knight.class && piece.getColor() == 'b') {
+          showBoard[sr][c] = new Empty("    /**/    ");
+          showBoard[sr+1][c] = new Empty(" |Black Nt| ");
+          showBoard[sr+2][c] = new Empty(" |########| ");
+        }
+        else if (piece.getClass() == Bishop.class && piece.getColor() == 'w') {
+          showBoard[sr][c] = new Empty("     /\\     ");
+          showBoard[sr+1][c] = new Empty(" |White Bi| ");
+          showBoard[sr+2][c] = new Empty(" |~~~~~~~~| ");
+        }
+        else if (piece.getClass() == Bishop.class && piece.getColor() == 'b') {
+          showBoard[sr][c] = new Empty("     /\\     ");
+          showBoard[sr+1][c] = new Empty(" |Black Bi| ");
+          showBoard[sr+2][c] = new Empty(" |########| ");
+        }
+        else if (piece.getClass() == Queen.class && piece.getColor() == 'w') {
+          showBoard[sr][c] = new Empty("   /\\/\\/\\   ");
+          showBoard[sr+1][c] = new Empty(" |White Qu| ");
+          showBoard[sr+2][c] = new Empty(" |~~~~~~~~| ");
+        }
+        else if (piece.getClass() == King.class && piece.getColor() == 'w') {
+          showBoard[sr][c] = new Empty("  /\\ || /\\  ");
+          showBoard[sr+1][c] = new Empty(" |White Kg| ");
+          showBoard[sr+2][c] = new Empty(" |~~~~~~~~| ");
+        }
+        else if (piece.getClass() == Queen.class && piece.getColor() == 'b') {
+          showBoard[sr][c] = new Empty("   /\\/\\/\\   ");
+          showBoard[sr+1][c] = new Empty(" |Black Qu| ");
+          showBoard[sr+2][c] = new Empty(" |########| ");
+        }
+        else if (piece.getClass() == King.class && piece.getColor() == 'b') {
+          showBoard[sr][c] = new Empty("  /\\ || /\\  ");
+          showBoard[sr+1][c] = new Empty(" |Black Kg| ");
+          showBoard[sr+2][c] = new Empty(" |########| ");
+        }
+        else {
+          showBoard[sr+1][c] = new Empty ("    ERROR   ");
+        }
+      }
+    }
+  }
   /*
   Solution to "AI"
   Different values for all the pieces, optimize board value, play with values over time
@@ -684,6 +795,9 @@ public class chess {
     board[r][c] = startPiece;
     board[i][j] = new Empty();
     int boardVal = getBaseBoardValue();
+    if (getCheckingPiece() != null) {
+      boardVal = Integer.MIN_VALUE;
+    }
     board[i][j] = startPiece;
     board[r][c] = endPiece;
     return boardVal;
@@ -701,7 +815,7 @@ public class chess {
    */
   public static void AITurn() {
     int bestStartRow = -1, bestStartCol = -1, bestEndRow = -1, bestEndCol = -1;
-    int bestBoardVal = -99999;
+    int bestBoardVal = Integer.MIN_VALUE + 5; //+5 to not have illegal moves be equal value
     int mod = 1;
     if (turn % 2 == 1) {
       mod = -1;

@@ -3,6 +3,7 @@ package Pieces;
 public class Empty implements Piece {
 
   char color = 0;
+  String name = "__";
 
   public Empty() {
 
@@ -12,8 +13,12 @@ public class Empty implements Piece {
     this.color = color;
   }
 
+  public Empty(String showName) {
+    name = showName;
+  }
+
   public String toString() {
-    return "__";
+    return name;
   }
 
   @Override
