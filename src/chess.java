@@ -19,6 +19,7 @@ public class chess {
 
   static Object[][] board = new Object[8][8];
   static Object[][] showBoard = new Object[24][8];
+  static Object[][] saveBoard = new Object[8][8];
 
   static Scanner keyIn = new Scanner(System.in);
 
@@ -161,7 +162,7 @@ public class chess {
     cleanEnPawns();
 
     if (turn % 2 == 1) {
-      AITurn();
+      AITurn(false);
     } else {
       if (getCheckingPiece() != null) {
         if (isCheckMate()) {
@@ -789,14 +790,18 @@ public class chess {
     return sum;
   }
 
-  public static int tryAndReport(int i, int j, int r, int c) {
+  public static int tryAndReport(int i, int j, int r, int c, Object[][] board, boolean thinking) {
     Piece startPiece = (Piece) board[i][j];
     Piece endPiece = (Piece) board[r][c];
     board[r][c] = startPiece;
     board[i][j] = new Empty();
-    int boardVal = getBaseBoardValue();
+    int boardVal;
     if (getCheckingPiece() != null) {
       boardVal = Integer.MIN_VALUE;
+    } else if (!thinking){
+      boardVal = recursionNightmare();
+    } else {
+      boardVal = getBaseBoardValue();
     }
     board[i][j] = startPiece;
     board[r][c] = endPiece;
@@ -813,7 +818,7 @@ public class chess {
   /*
   Cannot castle, will fail when attempting en passant
    */
-  public static void AITurn() {
+  public static int AITurn(boolean thinking) {
     int bestStartRow = -1, bestStartCol = -1, bestEndRow = -1, bestEndCol = -1;
     int bestBoardVal = Integer.MIN_VALUE + 5; //+5 to not have illegal moves be equal value
     int mod = 1;
@@ -831,12 +836,12 @@ public class chess {
             for (int c = 0; c < 8; c++) {
               Piece endPiece = (Piece) board[r][c];
               if (piece.isLegalCaptureShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getColor() == enemyColor(piece.getColor())) {
-                int newSum = tryAndReport(i, j, r, c) * mod;
+                int newSum = tryAndReport(i, j, r, c, board, thinking) * mod;
                 int maybe = rand.nextInt(7);
                 if (maybe == 2) {
                   newSum += 1;
                 }
-                if (newSum >= bestBoardVal) {
+                if (newSum > bestBoardVal) {
                   bestStartRow = i;
                   bestStartCol = j;
                   bestEndRow = r;
@@ -844,7 +849,7 @@ public class chess {
                   bestBoardVal = newSum;
                 }
               } else if (piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getClass() == Empty.class) {
-                int newSum = tryAndReport(i, j, r, c) * mod;
+                int newSum = tryAndReport(i, j, r, c, board, thinking) * mod;
                 int maybe = rand.nextInt(7);
                 if (maybe == 2) {
                   newSum += 1;
@@ -864,14 +869,40 @@ public class chess {
     }
     if (bestStartCol == -1) {
       System.out.println("No legal moves found!");
-    } else {
+    } else if (!thinking){
       Piece startPiece = (Piece) board[bestStartRow][bestStartCol];
       board[bestEndRow][bestEndCol] = startPiece;
       board[bestStartRow][bestStartCol] = new Empty();
       turn++;
       display();
       startTurn();
+    } else {
+      return bestBoardVal;
     }
+    return 0; //indicates success
+  }
+
+
+  public static void copyBoard() {
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        saveBoard[i][j] = board[i][j];
+      }
+    }
+  }
+
+  /*
+  For every move, will the resulting response result in a board state worse than
+  the existing board state (unfavorable capture-back). In all cases, return the
+  board value of the "optimal" response to the attempted move rather than the board
+  value after the move itself. This "thinking ahead" will *not also* think ahead.
+   */
+  public static int recursionNightmare() {
+   // copyBoard();
+    turn++;
+    int value = AITurn(true);
+    turn--;
+    return value;
   }
 
   public static void main(String[] args) {
