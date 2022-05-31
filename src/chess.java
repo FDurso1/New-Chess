@@ -33,6 +33,7 @@ public class chess {
   static int attackRow;
   static int attackCol;
   static int pawnVal = 10, knightVal = 30, bishopVal = 30, queenVal = 90, rookVal = 50;
+  static int lines = 0;
 
   public static void setBoard() {
 
@@ -145,6 +146,8 @@ public class chess {
   public static void cleanEnPawns() {
     for (int i = 2; i < 8; i+=3) {
       for (int j = 0; j < 8; j++) {
+        lines++;
+
         Piece piece = (Piece) board[i][j];
         if (piece.getClass() == enPawn.class) {
           if (turn % 2 == 0 && piece.getColor() == 'w') {
@@ -159,20 +162,23 @@ public class chess {
 
   public static void startTurn() {
 
-    cleanEnPawns();
+    //cleanEnPawns();
 
     if (turn % 2 == 1) {
       AITurn(false);
     } else {
-      if (getCheckingPiece() != null) {
-        if (isCheckMate()) {
-          System.out.println("The Game is Over! You are in CHECKMATE!");
-        }
-      } else {
-        if (checkStaleMate()) {
-          System.out.println("The Game is a Stalemate!");
-        }
-      }
+//    else {
+//      if (getCheckingPiece() != null) {
+//        if (isCheckMate()) {
+//          System.out.println("The Game is Over! You are in CHECKMATE!");
+//          System.exit(0);
+//        }
+//      } else {
+//        if (checkStaleMate()) {
+//          System.out.println("The Game is a Stalemate!");
+//          System.exit(0);
+//        }
+//      }
 
       System.out.println("Enter the coordinates, ex A1, or a piece you want to move");
       String input = keyIn.next();
@@ -208,6 +214,7 @@ public class chess {
     if (sc == ec) {
       if (sr > er) {
         for (int i = sr-1; i > er; i--) {
+          lines++;
           Piece piece = (Piece) board[i][sc];
           if (!(piece.getClass() == Empty.class)) {
             return false;
@@ -215,6 +222,7 @@ public class chess {
         }
       } else {
         for (int i = er-1; i > sr; i--) {
+          lines++;
           Piece piece = (Piece) board[i][sc];
           if (!(piece.getClass() == Empty.class)) {
             return false;
@@ -225,6 +233,7 @@ public class chess {
     } else if (sr == er) {
       if (sc > ec) {
         for (int i = sc-1; i > ec; i--) {
+          lines++;
           Piece piece = (Piece) board[sr][i];
           if (!(piece.getClass() == Empty.class)) {
             return false;
@@ -232,6 +241,7 @@ public class chess {
         }
       } else {
         for (int i = ec-1; i > sc; i--) {
+          lines++;
           Piece piece = (Piece) board[sr][i];
           if (!(piece.getClass() == Empty.class)) {
             return false;
@@ -253,6 +263,7 @@ public class chess {
     if (sr > er && sc > ec) {
    //   System.out.println("Start rows and cols greater");
       for (int i = 1; i < sr - er; i++) {
+        lines++;
         Piece piece = (Piece) board[sr-i][sc-i];
         if (piece.getClass() != Empty.class) {
           //System.out.println("Piece blocking at " + c + ", " + r);
@@ -264,6 +275,8 @@ public class chess {
     if (sr > er && sc < ec) {
    //   System.out.println("Start rows greater");
       for (int i = 1; i < sr - er; i++) {
+        lines++;
+
         Piece piece = (Piece) board[sr-i][sc+i];
         if (piece.getClass() != Empty.class) {
           //System.out.println("Piece blocking at " + c + ", " + r);
@@ -275,6 +288,8 @@ public class chess {
     if (sr < er && sc > ec) {
   //    System.out.println("Start cols greater");
       for (int i = 1; i < er - sr; i++) {
+        lines++;
+
         Piece piece = (Piece) board[sr+i][sc-i];
         if (piece.getClass() != Empty.class) {
           //System.out.println("Piece blocking at " + c + ", " + r);
@@ -286,6 +301,8 @@ public class chess {
     if (sr < er && sc < ec) {
   //    System.out.println("End rows and cols greater");
       for (int i = 1; i < er - sr; i++) {
+        lines++;
+
         Piece piece = (Piece) board[sr+i][sc+i];
         if (piece.getClass() != Empty.class) {
           //System.out.println("Piece blocking at " + c + ", " + r);
@@ -437,11 +454,6 @@ public class chess {
         }
       }
     }
-    promotePawns();
-    prepEnPassant(startRow, startCol, endRow, endCol);
-    turn++;
-    display();
-    startTurn();
   }
 
   /*
@@ -506,6 +518,8 @@ public class chess {
   public static int[] findCurKing() {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
+        lines++;
+
         Piece piece = (Piece) board[i][j];
         if (piece.getClass() == King.class && piece.getColor() == 'w' && turn%2 == 0) {
           return new int[]{i, j};
@@ -524,11 +538,13 @@ public class chess {
   //  System.out.println("King coords: " + kingCol + ", " + kingRow);
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
+        lines++;
+
         Piece piece = (Piece) board[i][j];
         if (piece.getColor() == 'b' && turn % 2 == 0 || piece.getColor() == 'w' && turn % 2 == 1) {
    //       System.out.println("Enemy " + piece.getName() + " detected");
           if (piece.isLegalCaptureShape(i, j, kingRow, kingCol, flipped) && wayIsClear(i, j, kingRow, kingCol)) {
-            System.out.println("An enemy " + piece.getName() + " on " + j + ", " + i + " is checking your king");
+            System.out.println("An enemy " + piece.getName() + " on " + getCoordName(i, j) + " is checking your king");
             attackRow = i;
             attackCol = j;
             return piece;
@@ -539,7 +555,7 @@ public class chess {
     return null;
   }
 
-  public static boolean isCheckMate() {
+/*  public static boolean isCheckMate() {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         Piece piece = (Piece) board[i][j];
@@ -565,18 +581,34 @@ public class chess {
     }
 
     return checkStaleMate();
-  }
+  } */
 
   public static boolean checkStaleMate() {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
+        lines++;
+
         Piece piece = (Piece) board[i][j];
         if (piece.getColor() == 'w' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
 
           for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
-              if (piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c)) {
-                Piece endPiece = (Piece) board[r][c];
+              lines++;
+
+              Piece endPiece = (Piece) board[r][c];
+
+              if (piece.getColor() == enemyColor(endPiece.getColor()) && piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c)) {
+                movePiece(i, j, r, c);
+                Piece dangerPiece = getCheckingPiece();
+                if (dangerPiece == null) {          //safe way out of check found, undo the move
+                  board[i][j] = piece;
+                  board[r][c] = endPiece;
+                  return false;
+                }
+                board[i][j] = piece;  //not a safe way out of check, still undo the move
+                board[r][c] = endPiece;
+              }
+              else if (endPiece.getClass() == Empty.class && piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c)) {
                 movePiece(i, j, r, c);
                 Piece dangerPiece = getCheckingPiece();
                 if (dangerPiece == null) {          //safe move found, undo the move
@@ -600,6 +632,8 @@ public class chess {
     String[] values = {"queen","rook","bishop","knight"};
 
     for (int i = 0; i < 8; i++) {
+      lines++;
+
       Piece piece = (Piece) board[0][i];
       Piece oPiece = (Piece) board[7][i];
      // System.out.println("Piece class: " + piece.getClass());
@@ -649,6 +683,10 @@ public class chess {
     }
   }
 
+  public static String getCoordName(int i, int j) {
+    return new String(new char[] { (char) (j + 'A'), (char) (i + '1'), });
+  }
+
   public static void showDisplay() {
     updateShowBoard();
     int counter = 0;
@@ -683,6 +721,8 @@ public class chess {
     for (int r = 0; r < 8; r++) {
       int sr = 3*r;
       for (int c = 0; c < 8; c++) {
+        lines++;
+
         Piece piece = (Piece) board[r][c];
 
         if (piece.getClass() == Empty.class || piece.getClass() == enPawn.class) {
@@ -766,9 +806,20 @@ public class chess {
    */
 
   public static int getBaseBoardValue() {
+
+    turn++;
+    if (getCheckingPiece() != null && checkStaleMate()) {
+      turn--;
+      System.out.println("   This move will result in checkmate!");
+      return 999999; //this is a checkmate threat, avoid at all costs
+    }
+    turn--;
+
     int sum = 0;
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
+        lines++;
+
         Piece piece = (Piece) board[i][j];
         int mod = 1;
         if (piece.getColor() == 'b') {
@@ -791,6 +842,8 @@ public class chess {
   }
 
   public static int tryAndReport(int i, int j, int r, int c, Object[][] board, boolean thinking) {
+    int starting = getBaseBoardValue();
+
     Piece startPiece = (Piece) board[i][j];
     Piece endPiece = (Piece) board[r][c];
     board[r][c] = startPiece;
@@ -803,6 +856,13 @@ public class chess {
     } else {
       boardVal = getBaseBoardValue();
     }
+
+    if (boardVal > starting) {
+      System.out.println("New best discovered here");
+     // display();
+    }
+
+
     board[i][j] = startPiece;
     board[r][c] = endPiece;
     return boardVal;
@@ -819,6 +879,14 @@ public class chess {
   Cannot castle, will fail when attempting en passant
    */
   public static int AITurn(boolean thinking) {
+
+    if (thinking) {
+      System.out.println("Thinking ahead");
+     // showDisplay();
+      System.out.println();
+    }
+
+
     int bestStartRow = -1, bestStartCol = -1, bestEndRow = -1, bestEndCol = -1;
     int bestBoardVal = Integer.MIN_VALUE + 5; //+5 to not have illegal moves be equal value
     int mod = 1;
@@ -826,40 +894,96 @@ public class chess {
       mod = -1;
     }
 
-    Random rand = new Random();
+    Random rand = new Random(10);
 
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
+        lines++;
+
         Piece piece = (Piece) board[i][j];
-        if (piece.getColor() == '2' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
+        if (piece.getColor() == 'w' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
           for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
+              lines++;
+
               Piece endPiece = (Piece) board[r][c];
               if (piece.isLegalCaptureShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getColor() == enemyColor(piece.getColor())) {
+
+                if (!thinking) {
+                  System.out.println();
+                  System.out.println("CONSIDERING THE CAPTURE " + piece.getColor() + " " + piece.getName() + " TO " + endPiece.getColor() + " " + endPiece.getName());
+                } else {
+                  System.out.println("Considering the capture " + piece.getColor() + " " + piece.getName() + " to " + endPiece.getColor() + " " + endPiece.getName());
+                }
+
                 int newSum = tryAndReport(i, j, r, c, board, thinking) * mod;
                 int maybe = rand.nextInt(7);
-                if (maybe == 2) {
-                  newSum += 1;
+                if (!thinking && maybe == 2) {
+                  newSum += rand.nextInt(2);
                 }
+
                 if (newSum > bestBoardVal) {
                   bestStartRow = i;
                   bestStartCol = j;
                   bestEndRow = r;
                   bestEndCol = c;
                   bestBoardVal = newSum;
+
+                  System.out.println("New best found after capture " + getCoordName(i, j) + " to " + getCoordName(r, c));
+
+                  if (!thinking) {
+                    System.out.println(piece.getName() + " " + getCoordName(i, j) + " TO " + getCoordName(r, c) + " (capture) IS THE CURRENT BEST MOVE with a board value of " + bestBoardVal);
+                  } else {
+                    System.out.println("Best response board value: " + bestBoardVal);
+                  }
+
                 }
               } else if (piece.isLegalMoveShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getClass() == Empty.class) {
+
+                if (!thinking) {
+                  System.out.println();
+                  System.out.println("CONSIDERING THE MOVE " + piece.getName() + " " + getCoordName(i, j) + " TO " + getCoordName(r, c));
+                } else {
+                  System.out.println("Considering the move " + piece.getName() + " " + getCoordName(i, j) + " to " + getCoordName(r, c));
+                }
+
                 int newSum = tryAndReport(i, j, r, c, board, thinking) * mod;
                 int maybe = rand.nextInt(7);
-                if (maybe == 2) {
-                  newSum += 1;
+                if (!thinking && maybe == 2) {
+                  newSum += rand.nextInt(2);
                 }
-                if (newSum >= bestBoardVal) {
+
+                //encourage advancing pieces a little bit
+                if (!thinking && !flipped) {
+                  if (turn % 2 == 0 && i > r) {
+                    newSum += 1;
+                  } else if (turn % 2 == 1 && i < r) {
+                    System.out.println("Giving this move a bit of a boost");
+                    newSum += 1;
+                  }
+                } else if (!thinking){
+                  if (turn % 2 == 1 && i < r) {
+                    newSum += 1;
+                  } else if (turn % 2 == 0 && i > r) {
+                    newSum += 1;
+                  }
+                }
+
+                if (newSum > bestBoardVal) {
                   bestStartRow = i;
                   bestStartCol = j;
                   bestEndRow = r;
                   bestEndCol = c;
                   bestBoardVal = newSum;
+
+                  System.out.println("New best found: " + getCoordName(i, j) + " to " + getCoordName(r, c));
+
+                  if (!thinking) {
+                    System.out.println(piece.getName() + " " + getCoordName(i, j) + " TO " + getCoordName(r, c) + " IS THE CURRENT BEST MOVE with a board value of " + bestBoardVal);
+                  } else {
+                    System.out.println("Best response board value: " + bestBoardVal);
+                  }
+
                 }
               }
             }
@@ -869,13 +993,17 @@ public class chess {
     }
     if (bestStartCol == -1) {
       System.out.println("No legal moves found!");
+      if (!thinking) {
+        System.out.println("GAME OVER!");
+        System.exit(0);
+      }
     } else if (!thinking){
       Piece startPiece = (Piece) board[bestStartRow][bestStartCol];
       board[bestEndRow][bestEndCol] = startPiece;
       board[bestStartRow][bestStartCol] = new Empty();
-      turn++;
-      display();
-      startTurn();
+    //  turn++;
+    //  display();
+     // startTurn();
     } else {
       return bestBoardVal;
     }
@@ -883,13 +1011,13 @@ public class chess {
   }
 
 
-  public static void copyBoard() {
-    for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
-        saveBoard[i][j] = board[i][j];
-      }
-    }
-  }
+//  public static void copyBoard() {
+//    for (int i = 0; i < 8; i++) {
+//      for (int j = 0; j < 8; j++) {
+//        saveBoard[i][j] = board[i][j];
+//      }
+//    }
+//  }
 
   /*
   For every move, will the resulting response result in a board state worse than
@@ -898,6 +1026,8 @@ public class chess {
   value after the move itself. This "thinking ahead" will *not also* think ahead.
    */
   public static int recursionNightmare() {
+    System.out.println("Recursion nightmare");
+   // display();
    // copyBoard();
     turn++;
     int value = AITurn(true);
@@ -907,8 +1037,25 @@ public class chess {
 
   public static void main(String[] args) {
     setBoard();
-    display();
-    startTurn();
+
+    while (!checkStaleMate()) {
+      display();
+      System.out.println();
+      System.out.println("   Turn " + turn);
+      System.out.println("   Lines: " + lines);
+      System.out.println();
+      cleanEnPawns();
+      startTurn();
+      promotePawns();
+      prepEnPassant(startRow, startCol, endRow, endCol);
+      turn++;
+    }
+    if (getCheckingPiece() == null) {
+      System.out.println("The game is a draw!");
+    } else {
+      System.out.println("The game is OVER, you are in CHECKMATE!");
+    }
+    System.exit(0);
   }
 
 }
