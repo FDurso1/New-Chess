@@ -9,10 +9,6 @@ public class Empty implements Piece {
 
   }
 
-  public Empty(char color) {
-    this.color = color;
-  }
-
   public Empty(String showName) {
     name = showName;
   }
@@ -38,6 +34,6 @@ public class Empty implements Piece {
 
   @Override
   public String getName() {
-    return null;
+    return name;
   }
 }

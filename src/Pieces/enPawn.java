@@ -9,7 +9,7 @@ public class enPawn implements Piece {
   }
 
   public String toString() {
-    return "__";
+    return new String(new char[] { color, '_' });
   }
 
   @Override
