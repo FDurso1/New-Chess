@@ -23,7 +23,7 @@ public class King implements Piece {
   public boolean isLegalMoveShape(int startRow, int startCol, int endRow, int endCol, boolean flipped) {
     boolean horMove = Math.abs(startRow - endRow) <= 1 ;
     boolean vertMove = Math.abs(startCol - endCol) <= 1;
-    return horMove && vertMove && (startCol - endRow + startCol - endCol) != 0;
+    return horMove && vertMove && (startRow - endRow + startCol - endCol) != 0;
   }
 
   @Override

@@ -855,10 +855,10 @@ public class chess {
     board[r][c] = startPiece;
     board[i][j] = new Empty();
     int boardVal;
-    if (getCheckingPiece() != null) {
+    if (getCheckingPiece() != null) { //don't allow moves which put king in check
       boardVal = Integer.MIN_VALUE;
     } else if (!thinking){
-      boardVal = recursionNightmare();
+      boardVal = lookAheadOne();
     } else {
       boardVal = getBaseBoardValue();
     }
@@ -882,7 +882,7 @@ public class chess {
   }
 
   /*
-  Cannot castle, will fail when attempting en passant
+  Cannot castle
    */
   public static int AITurn(boolean thinking) {
 
@@ -917,9 +917,9 @@ public class chess {
 
                 if (!thinking) {
                   System.out.println();
-                  System.out.println("CONSIDERING THE CAPTURE " + piece.getColor() + " " + piece.getName() + " TO " + endPiece.getColor() + " " + endPiece.getName());
+                  System.out.println("CONSIDERING THE CAPTURE " + piece.getColor() + " " + piece.getName() + " TO " + getCoordName(r, c));
                 } else {
-                  System.out.println("Considering the capture " + piece.getColor() + " " + piece.getName() + " to " + endPiece.getColor() + " " + endPiece.getName());
+                  System.out.println("Considering the re-capture " + piece.getColor() + " " + piece.getName() + " to " + getCoordName(r,c));
                 }
 
                 int newSum = tryAndReport(i, j, r, c, board, thinking) * mod;
@@ -1033,12 +1033,11 @@ public class chess {
 
   /*
   For every move, will the resulting response result in a board state worse than
-  the existing board state (unfavorable capture-back). In all cases, return the
+  the existing board state (unfavorable capture-back)? In all cases, return the
   board value of the "optimal" response to the attempted move rather than the board
   value after the move itself. This "thinking ahead" will *not also* think ahead.
    */
-  public static int recursionNightmare() {
-    System.out.println("Recursion nightmare");
+  public static int lookAheadOne() {
    // display();
    // copyBoard();
     turn++;
@@ -1046,6 +1045,40 @@ public class chess {
     turn--;
     return value;
   }
+
+  /*
+  I want it to be able to look through an entire capture chain, be able to recognize a favorable or equal end result,
+  but not be forced to always capture (ex, with a queen unfavorably) just because it can. As such, I think this func
+  needs to examine all the possible response-captures, and for each get the best response *to* that capture. It should
+  repeat this process until the player can no longer capture back, at which point the board value is returned.
+   */
+
+  public static void canCapture(int lowest) {
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        lines++;
+
+        Piece piece = (Piece) board[i][j];
+        if (piece.getColor() == 'w' && turn % 2 == 0 || piece.getColor() == 'b' && turn % 2 == 1) {
+          for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+              lines++;
+
+              Piece endPiece = (Piece) board[r][c];
+              if (piece.isLegalCaptureShape(i, j, r, c, flipped) && wayIsClear(i, j, r, c) && endPiece.getColor() == enemyColor(piece.getColor())) {
+
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  public static void recursionNightmare() {
+
+  }
+
 
   public static void announceTurn() {
     Piece endPiece = (Piece) board[endRow][endCol];
