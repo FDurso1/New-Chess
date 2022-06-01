@@ -19,12 +19,12 @@ public class chess {
 
   static Object[][] board = new Object[8][8];
   static Object[][] showBoard = new Object[24][8];
-  static Object[][] saveBoard = new Object[8][8];
 
   static Scanner keyIn = new Scanner(System.in);
 
   static boolean flipped = false;
-  static boolean flipActive = true;
+  static boolean turnSuccess = true;
+
   static int turn = 0;
   static int startRow;  //adjusted for -1 from having rows 1-8 but array rows 0-7
   static int startCol;  //adjusted for letters --> numbers
@@ -34,7 +34,6 @@ public class chess {
   static int attackCol;
   static int pawnVal = 10, knightVal = 30, bishopVal = 30, queenVal = 90, rookVal = 50;
   static int lines = 0;
-  static boolean turnSuccess = true;
 
   public static void setBoard() {
 
@@ -398,52 +397,53 @@ public class chess {
     if (isInvalidInput(input)) {
       System.out.println("Disregarding previous piece selection");
       turnSuccess = false;
-    }
-    endCol = convertColumn(input.charAt(0));
-    endRow = input.charAt(1) - '0';
-    endRow -= 1;
-    if (flipped) {
-      endRow = 7 - endRow;
-    }
-    System.out.println("TESTING: endRow: " + endRow);
-    System.out.println("TESTING: endCol: " + endCol);
-
-    if (pieceSameAsCurTurn(endRow, endCol)) {
-      System.out.println("Error, you cannot move onto your own piece.");
-      System.out.println("Disregarding previous piece selection");
-      turnSuccess = false;
-    } else if (tryCastle()) {
-      if (!legalCastle()) {
-        turnSuccess = false;
-      } //else, legal castle, skip ahead to end-turn calls
     } else {
-      Piece curPiece = (Piece) board[startRow][startCol];
-      Piece curEndPiece = (Piece) board[endRow][endCol];
+      endCol = convertColumn(input.charAt(0));
+      endRow = input.charAt(1) - '0';
+      endRow -= 1;
+      if (flipped) {
+        endRow = 7 - endRow;
+      }
+      System.out.println("TESTING: endRow: " + endRow);
+      System.out.println("TESTING: endCol: " + endCol);
 
-      if (!wayIsClear(startRow, startCol, endRow, endCol)) {
-        System.out.println("There is a piece blocking that movement. Disregarding previous piece selection.");
+      if (pieceSameAsCurTurn(endRow, endCol)) {
+        System.out.println("Error, you cannot move onto your own piece.");
+        System.out.println("Disregarding previous piece selection");
         turnSuccess = false;
+      } else if (tryCastle()) {
+        if (!legalCastle()) {
+          turnSuccess = false;
+        } //else, legal castle, skip ahead to end-turn calls
       } else {
-        if (curEndPiece.getClass() == Empty.class) {    //not a capture
-          if (!curPiece.isLegalMoveShape(startRow, startCol, endRow, endCol, flipped)) {
-            System.out.println("Illegal move shape. Disregarding previous piece selection");
-            turnSuccess = false;
+        Piece curPiece = (Piece) board[startRow][startCol];
+        Piece curEndPiece = (Piece) board[endRow][endCol];
+
+        if (!wayIsClear(startRow, startCol, endRow, endCol)) {
+          System.out.println("There is a piece blocking that movement. Disregarding previous piece selection.");
+          turnSuccess = false;
+        } else {
+          if (curEndPiece.getClass() == Empty.class) {    //not a capture
+            if (!curPiece.isLegalMoveShape(startRow, startCol, endRow, endCol, flipped)) {
+              System.out.println("Illegal move shape. Disregarding previous piece selection");
+              turnSuccess = false;
+            }
+          } else {      //capture
+            if (!curPiece.isLegalCaptureShape(startRow, startCol, endRow, endCol, flipped)) {
+              System.out.println("Illegal capture shape. Disregarding previous piece selection");
+              turnSuccess = false;
+            }
           }
-        } else {      //capture
-          if (!curPiece.isLegalCaptureShape(startRow, startCol, endRow, endCol, flipped)) {
-            System.out.println("Illegal capture shape. Disregarding previous piece selection");
-            turnSuccess = false;
-          }
-        }
-        if (turnSuccess) {
-          movePiece(startRow, startCol, endRow, endCol);
-          Piece dangerPiece = getCheckingPiece();
-          if (dangerPiece != null) {
-            System.out.println("This move leaves your king in threatened by an enemy " + dangerPiece.getName() + ". " +
-                    "Disregarding previous piece selection");
-            board[startRow][startCol] = curPiece;
-            board[endRow][endCol] = curEndPiece;
-            turnSuccess = false;
+          if (turnSuccess) {
+            movePiece(startRow, startCol, endRow, endCol);
+            Piece dangerPiece = getCheckingPiece();
+            if (dangerPiece != null) {
+              System.out.println("This move leaves your king in threatened by an enemy " + dangerPiece.getName() + ". " +
+                      "Disregarding previous piece selection");
+              board[startRow][startCol] = curPiece;
+              board[endRow][endCol] = curEndPiece;
+              turnSuccess = false;
+            }
           }
         }
       }
@@ -1007,7 +1007,14 @@ public class chess {
       Piece startPiece = (Piece) board[bestStartRow][bestStartCol];
       board[bestEndRow][bestEndCol] = startPiece;
       board[bestStartRow][bestStartCol] = new Empty("xx");
-    //  turn++;
+
+      //prepEnPassant(bestStartRow, bestStartCol, bestEndRow, bestEndCol);
+      startRow = bestStartRow;
+      startCol = bestStartCol;
+      endRow = bestEndRow;
+      endCol = bestEndCol;
+
+      //  turn++;
     //  display();
     } else {
       return bestBoardVal;
@@ -1040,12 +1047,18 @@ public class chess {
     return value;
   }
 
+  public static void announceTurn() {
+    Piece endPiece = (Piece) board[endRow][endCol];
+    System.out.println(endPiece.getName() + " to " + getCoordName(endRow, endCol));
+  }
+
   public static void main(String[] args) {
     setBoard();
 
     while (!checkStaleMate()) {
       display();
       System.out.println();
+      announceTurn();
       System.out.println("   Turn " + turn);
       System.out.println("   Lines: " + lines);
       System.out.println();
@@ -1064,7 +1077,7 @@ public class chess {
     if (getCheckingPiece() == null) {
       System.out.println("The game is a draw!");
     } else {
-      System.out.println("The game is OVER, you are in CHECKMATE!");
+      System.out.println("The game is OVER, you have checkmated your opponent!");
     }
     System.exit(0);
   }
