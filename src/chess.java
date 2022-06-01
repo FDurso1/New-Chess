@@ -184,7 +184,7 @@ public class chess {
         startRow = input.charAt(1) - '0';
         startRow -= 1;
         if (flipped) {
-          startRow = 7 - startRow;
+          //startRow = 7 - startRow;
         }
         System.out.println("TESTING: startRow: " + startRow);
         startCol = convertColumn(input.charAt(0));
@@ -402,7 +402,7 @@ public class chess {
       endRow = input.charAt(1) - '0';
       endRow -= 1;
       if (flipped) {
-        endRow = 7 - endRow;
+       // endRow = 7 - endRow;
       }
       System.out.println("TESTING: endRow: " + endRow);
       System.out.println("TESTING: endCol: " + endCol);
@@ -634,31 +634,36 @@ public class chess {
      // System.out.println("oPiece class: " + oPiece.getClass());
 
       if (piece.getClass() == Pawn.class || oPiece.getClass() == Pawn.class) {
-        System.out.println("What would you like to promote your pawn to (ex, Queen)?");
-        String input = keyIn.next();
-        while(!Arrays.asList(values).contains(input.toLowerCase())) {
-          System.out.println("That is not a legal piece selection. Please select again");
-          input = keyIn.next();
-        }
-        if (turn % 2 == 0) {
-          if (input.equalsIgnoreCase("queen")) {
-            board[0][i] = new Queen('w');
-          } else if (input.equalsIgnoreCase("rook")) {
-            board[0][i] = new Rook('w', true);
-          } else if (input.equalsIgnoreCase("bishop")) {
-            board[0][i] = new Bishop('w');
-          } else {
-            board[0][i] = new Knight('w');
-          }
+
+        if (oPiece.getColor() == 'b') {  //AI will always auto-promote queen
+          board[7][i] = new Queen('b');
         } else {
-          if (input.equalsIgnoreCase("queen")) {
-            board[7][i] = new Queen('b');
-          } else if (input.equalsIgnoreCase("rook")) {
-            board[7][i] = new Rook('b', true);
-          } else if (input.equalsIgnoreCase("bishop")) {
-            board[7][i] = new Bishop('b');
+          System.out.println("What would you like to promote your pawn to (ex, Queen)?");
+          String input = keyIn.next();
+          while(!Arrays.asList(values).contains(input.toLowerCase())) {
+            System.out.println("That is not a legal piece selection. Please select again");
+            input = keyIn.next();
+          }
+          if (turn % 2 == 0) {
+            if (input.equalsIgnoreCase("queen")) {
+              board[0][i] = new Queen('w');
+            } else if (input.equalsIgnoreCase("rook")) {
+              board[0][i] = new Rook('w', true);
+            } else if (input.equalsIgnoreCase("bishop")) {
+              board[0][i] = new Bishop('w');
+            } else {
+              board[0][i] = new Knight('w');
+            }
           } else {
-            board[7][i] = new Knight('b');
+            if (input.equalsIgnoreCase("queen")) {
+              board[7][i] = new Queen('b');
+            } else if (input.equalsIgnoreCase("rook")) {
+              board[7][i] = new Rook('b', true);
+            } else if (input.equalsIgnoreCase("bishop")) {
+              board[7][i] = new Bishop('b');
+            } else {
+              board[7][i] = new Knight('b');
+            }
           }
         }
       }
@@ -678,7 +683,11 @@ public class chess {
   }
 
   public static String getCoordName(int i, int j) {
-    return new String(new char[] { (char) (j + 'A'), (char) (i + '1'), });
+
+    if (!flipped) {
+      return new String(new char[] { (char) (j + 'A'), (char) (i + '1') });
+    }
+      return new String(new char[] { (char) ('H' - j), (char) (i + '1') });
   }
 
   public static void showDisplay() {
@@ -709,7 +718,13 @@ public class chess {
       }
     }
     System.out.println();
-    System.out.println("        A            B             C             D              E             F              G            H");
+
+    if (!flipped) {
+      System.out.println("        A            B             C             D              E             F              G            H");
+    } else {
+      System.out.println("        H            G             F             E              D             C              B            A");
+    }
+
   }
   public static void updateShowBoard() {
     for (int r = 0; r < 8; r++) {
